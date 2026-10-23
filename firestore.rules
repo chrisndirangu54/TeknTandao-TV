@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // This TV project's browser/mobile clients have no direct access
+    // to billing, ISP, viewer events or broadcaster private records.
+    // Access is mediated by authenticated functions with scoped checks.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
