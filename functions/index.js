@@ -109,3 +109,9 @@ exports.partyAction=watchParties.partyAction;
 exports.partyComment=watchParties.partyComment;
 
 exports.partySnapshot=watchParties.partySnapshot;
+
+const musicParties=require('./src/music_party_api');
+exports.proposeTrack=musicParties.proposeTrack;
+exports.voteTrack=musicParties.voteTrack;
+exports.musicQueue=musicParties.musicQueue;
+exports.createTvTipIntent=musicParties.createTvTipIntent;
