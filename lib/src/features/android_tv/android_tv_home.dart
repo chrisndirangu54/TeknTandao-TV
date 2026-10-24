@@ -150,26 +150,13 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                     final channel = channels[i];
                     final active = selectedIndex == i;
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: Material(
-                        color: active ? const Color(0xFF205A91) : const Color(0xFF1B2639),
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          canRequestFocus: false,
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => tune(i),
-                          child: Padding(padding: const EdgeInsets.all(17), child: Row(children: [
-                            Text('${channel.number}', style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 18),
-                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(channel.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 19)),
-                              Text(channel.category, style: const TextStyle(color: Colors.white70)),
-                            ])),
-                            if (active) const Icon(Icons.play_arrow),
-                          ])),
-                        ),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: TvActionTile(
+                        label: '${channel.number}   ${channel.title}',
+                        description: channel.category,
+                        icon: active ? Icons.play_circle_fill : Icons.live_tv,
+                        selected: active,
+                        onPressed: () => tune(i),
                       ),
                     );
                   },
