@@ -61,6 +61,7 @@ class _WatchPartyScreenState extends State<WatchPartyScreen> {
           ButtonSegment(value:'movie',label:Text('Movies'),icon:Icon(Icons.movie)),
           ButtonSegment(value:'tv',label:Text('TV'),icon:Icon(Icons.live_tv)),
           ButtonSegment(value:'podcast',label:Text('Podcasts'),icon:Icon(Icons.mic)),
+          ButtonSegment(value:'music',label:Text('Music'),icon:Icon(Icons.music_note)),
         ],
         selected:{kind},onSelectionChanged:(values)=>setState(()=>kind=values.first)),
       const SizedBox(height:16),
