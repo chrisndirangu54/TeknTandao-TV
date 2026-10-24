@@ -17,6 +17,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
   int selectedIndex = 0;
   VideoPlayerController? player;
   String? error;
+  List<Programme> programmeGuide = const [];
   bool loading = true;
   int generation = 0;
   final FocusNode guideFocus = FocusNode(debugLabel: 'Guide');
@@ -44,7 +45,10 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
     if (index < 0 || index >= channels.length) return;
     final request = ++generation;
     final old = player;
-    setState(() { selectedIndex = index; player = null; error = null; });
+    setState(() { selectedIndex = index; player = null; error = null; programmeGuide = const []; });
+    widget.services.catalog.schedule(channels[index].id).then((items) {
+      if (mounted && generation == request) setState(() => programmeGuide = items);
+    }).catchError((Object _) { /* Schedule is optional during playback. */ });
     await old?.dispose();
     if (!mounted || generation != request) return;
     final url = channels[index].hlsUrl;
@@ -135,6 +139,12 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                 const SizedBox(height: 8),
                 Text(current?.description ?? 'Discover broadcasters through a familiar channel guide.',
                   style: const TextStyle(color: Colors.white70, fontSize: 18)),
+                const SizedBox(height: 12),
+                Text('UP NEXT', style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 6),
+                Text(programmeGuide.isEmpty ? 'Programme schedule pending' :
+                  programmeGuide.first.title,
+                  style: const TextStyle(color: Colors.white70,fontSize: 17)),
                 const SizedBox(height: 12),
                 const Text('Live restart and recording require broadcaster rights and DVR infrastructure.',
                   style: TextStyle(color: Colors.white54)),
