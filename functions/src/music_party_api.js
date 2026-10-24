@@ -4,6 +4,16 @@ const {authorize}=require('./security');
 const {trackRequest,tipRequest,tipId,rankQueue}=require('./music_party_core');
 if(!admin.apps.length)admin.initializeApp();
 const db=admin.firestore();
+async function hasMusicEntitlement(uid) {
+ const snap=await db.collection('subscriptions').where('customerId','==',uid).limit(100).get();
+ const now=Date.now();
+ return snap.docs.some(s=>{
+  if(!['TV','ISP_TV_BUNDLE'].includes(s.get('product'))||!['active','trialing'].includes(s.get('status')))return false;
+  const start=s.get('startsAt')?.toDate?.()?.getTime?.();
+  const end=s.get('endsAt')?.toDate?.()?.getTime?.();
+  return (start==null||start<=now)&&(end==null||end>now);
+ });
+}
 const secured=handler=>onRequest({region:'europe-west1',cors:false},async(req,res)=>{
  res.set('Cache-Control','no-store');if(req.method!=='POST')return res.status(405).json({error:'method'});
  let principal;try{principal=await authorize(req,t=>admin.auth().verifyIdToken(t,true));}
@@ -12,6 +22,7 @@ const secured=handler=>onRequest({region:'europe-west1',cors:false},async(req,re
 });
 const proposeTrack=secured(async(req,res,uid)=>{
  const {roomId,trackId}=trackRequest(req.body);
+ if(!await hasMusicEntitlement(uid))return res.status(403).json({error:'subscription_required'});
  const roomRef=db.collection('watchParties').doc(roomId),trackRef=db.collection('musicTracks').doc(trackId);
  const [room,track]=await Promise.all([roomRef.get(),trackRef.get()]);
  if(!room.exists||room.get('kind')!=='music'||!room.get('members')?.includes(uid))return res.status(403).json({error:'not_member'});
@@ -23,7 +34,9 @@ const proposeTrack=secured(async(req,res,uid)=>{
  return res.status(200).json({trackId,queued:true});
 });
 const voteTrack=secured(async(req,res,uid)=>{
- const {roomId,trackId}=trackRequest(req.body),roomRef=db.collection('watchParties').doc(roomId);
+ const {roomId,trackId}=trackRequest(req.body);
+ if(!await hasMusicEntitlement(uid))return res.status(403).json({error:'subscription_required'});
+ const roomRef=db.collection('watchParties').doc(roomId);
  const voteRef=roomRef.collection('votes').doc(uid),queueRef=roomRef.collection('queue').doc(trackId);
  const result=await db.runTransaction(async tx=>{
   const [room,track,previous]=await Promise.all([tx.get(roomRef),tx.get(queueRef),tx.get(voteRef)]);
@@ -35,6 +48,7 @@ const voteTrack=secured(async(req,res,uid)=>{
 });
 const musicQueue=secured(async(req,res,uid)=>{
  const id=req.body?.roomId;if(typeof id!=='string')return res.status(400).json({error:'invalid_room'});
+ if(!await hasMusicEntitlement(uid))return res.status(403).json({error:'subscription_required'});
  const ref=db.collection('watchParties').doc(id),room=await ref.get();
  if(!room.exists||room.get('kind')!=='music'||!room.get('members')?.includes(uid))return res.status(403).json({error:'not_member'});
  const [queue,votes]=await Promise.all([ref.collection('queue').limit(100).get(),ref.collection('votes').limit(200).get()]);
