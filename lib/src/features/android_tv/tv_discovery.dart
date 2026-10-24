@@ -23,7 +23,7 @@ class _TvDiscoveryScreenState extends State<TvDiscoveryScreen> {
         const SizedBox(height:18),
         Row(children:[
           FilterChip(label:const Text('Kids mode'),selected:widget.library.kidsMode,
-            onSelected:(v)=>setState(()=>widget.library.kidsMode=v)),
+            onSelected:(v){setState(()=>widget.library.kidsMode=v);widget.library.save();}),
           const SizedBox(width:12),
           Text('${items.length} channels'),
         ]),
@@ -36,7 +36,7 @@ class _TvDiscoveryScreenState extends State<TvDiscoveryScreen> {
             subtitle:Text(c.category),
             trailing:IconButton(tooltip:'Favorite',icon:Icon(
               widget.library.favorites.contains(c.id) ? Icons.star : Icons.star_border),
-              onPressed:()=>setState(()=>widget.library.toggleFavorite(c.id))),
+              onPressed:(){setState(()=>widget.library.toggleFavorite(c.id));widget.library.save();}),
             onTap:()=>widget.onSelect(c),
           );
         })),
