@@ -107,3 +107,5 @@ exports.createWatchParty=watchParties.createWatchParty;
 exports.joinWatchParty=watchParties.joinWatchParty;
 exports.partyAction=watchParties.partyAction;
 exports.partyComment=watchParties.partyComment;
+
+exports.partySnapshot=watchParties.partySnapshot;
