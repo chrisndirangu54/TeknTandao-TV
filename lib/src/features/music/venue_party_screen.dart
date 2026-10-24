@@ -10,10 +10,10 @@ class VenuePartyScreen extends StatefulWidget {
  @override State<VenuePartyScreen> createState()=>_VenuePartyScreenState();
 }
 class _VenuePartyScreenState extends State<VenuePartyScreen>{
- final name=TextEditingController(),area=TextEditingController(),room=TextEditingController(),code=TextEditingController(),operator=TextEditingController(),messageText=TextEditingController();
+ final name=TextEditingController(),area=TextEditingController(),room=TextEditingController(),code=TextEditingController(),operator=TextEditingController(),messageText=TextEditingController(),handle=TextEditingController();
  String type='club',admission='public',djMode='ai',feature='song_request',message='';
  bool discoverable=false,busy=false;
- List<dynamic> rooms=const [];
+ List<dynamic> rooms=const [],pendingMembers=const [];
  Future<void> call(String endpoint,Map<String,dynamic> data)async{
   if(widget.service==null){setState(()=>message='Connect a verified sign-in and the deployed venue API first.');return;}
   setState(()=>busy=true);
@@ -22,13 +22,15 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    if(!mounted)return;
    setState((){
     if(endpoint=='discoverVenueParties'){rooms=result['rooms'] as List<dynamic>? ?? [];message='${rooms.length} venues found';}
+    else if(endpoint=='pendingVenueAdmissions'){pendingMembers=result['pending'] as List<dynamic>? ?? [];message='${pendingMembers.length} admission requests';}
+    else if(endpoint=='findPartyUser'){message='Found opt-in username: ${result['displayName']}';}
     else if(endpoint=='createVenueParty'){room.text=(result['roomId']??'').toString();code.text=(result['joinCode']??'').toString();message='Venue created. Keep your invitation code private.';}
     else message='Request submitted: ${result['status']??result['orderId']??result['operatorId']??'accepted'}';
    });
   }catch(_){if(mounted)setState(()=>message='Request failed. Check admission, account, pricing and room permissions.');}
   finally{if(mounted)setState(()=>busy=false);}
  }
- @override void dispose(){for(final t in [name,area,room,code,operator,messageText]){t.dispose();}super.dispose();}
+ @override void dispose(){for(final t in [name,area,room,code,operator,messageText,handle]){t.dispose();}super.dispose();}
  @override Widget build(BuildContext context)=>Scaffold(
   appBar:AppBar(title:const Text('Venue party mode')),
   body:ListView(padding:const EdgeInsets.all(22),children:[
@@ -71,6 +73,11 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    ],
    OutlinedButton(onPressed:busy?null:()=>call('joinVenueParty',{'roomId':room.text.trim(),'joinCode':code.text.trim()}),
      child:const Text('Join room')),
+   const SizedBox(height:12),
+   TextField(controller:handle,decoration:const InputDecoration(labelText:'Search public party username')),
+   OutlinedButton(onPressed:busy?null:()=>call('findPartyUser',{'handle':handle.text.trim().toLowerCase()}),child:const Text('Search username')),
+   OutlinedButton(onPressed:busy?null:()=>call('pendingVenueAdmissions',{'roomId':room.text.trim()}),child:const Text('Review admission requests')),
+   for(final member in pendingMembers)ListTile(title:Text(member.toString()),trailing:TextButton(onPressed:busy?null:()=>call('approveVenueMember',{'roomId':room.text.trim(),'memberId':member}),child:const Text('Admit'))),
    const Divider(),
    Text('Host audio output',style:Theme.of(context).textTheme.titleLarge),
    TextField(controller:operator,decoration:const InputDecoration(labelText:'Authorized stereo operator user ID')),
