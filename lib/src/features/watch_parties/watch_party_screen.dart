@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'watch_party_room_screen.dart';
 
 /// Authenticated endpoint client for shared room actions.
 /// Backend base URLs must come from a trusted deployment configuration.
@@ -84,8 +85,13 @@ class _WatchPartyScreenState extends State<WatchPartyScreen> {
           const Text('Party created',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold)),
           SelectableText('Room ID: $roomId'),
           if(inviteCode!=null)SelectableText('Private invitation token (share securely): $inviteCode'),
-          const Text('The live room, synchronized player, voice notes and video calls '
-            'need their authenticated session clients before use.'),
+          if(widget.service!=null) FilledButton.icon(
+            onPressed:()=>Navigator.push(context,MaterialPageRoute<void>(
+              builder:(_)=>WatchPartyRoomScreen(service:widget.service!,roomId:roomId!))),
+            icon:const Icon(Icons.meeting_room),label:const Text('Open party room')),
+          const Text('The live room supports manual refresh, comments and host commands. '
+            'Live video calls, voice notes and synchronized player drift correction '
+            'require additional media services.'),
         ]))),
       const SizedBox(height:26),
       Text('Room features',style:Theme.of(context).textTheme.titleLarge),
