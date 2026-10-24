@@ -30,6 +30,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
   @override
   void initState() {
     super.initState();
+    library.load().then((_) { if (mounted) setState(() {}); });
     load();
   }
 
@@ -65,6 +66,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
       if (!mounted || generation != request) { await next.dispose(); return; }
       setState(() => player = next);
       library.recordProgress(channels[index].id, next.value.position);
+    library.save();
     } catch (_) {
       await next.dispose();
       if (mounted && generation == request) setState(() => error = 'Playback unavailable on this device.');
