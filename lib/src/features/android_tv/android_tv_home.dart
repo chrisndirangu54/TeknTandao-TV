@@ -6,6 +6,7 @@ import 'tv_discovery.dart';
 import 'tv_media_controls.dart';
 import 'tv_profile_settings.dart';
 import 'playback_diagnostics.dart';
+import 'tv_programme_guide.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 
@@ -142,6 +143,15 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
               const SizedBox(width: 16),
               Text('TeknTandao TV', style: Theme.of(context).textTheme.headlineMedium),
               const Spacer(),
+              TextButton.icon(onPressed: () {
+                Navigator.push(context,MaterialPageRoute<void>(builder: (_)=>TvProgrammeGuide(
+                  services: widget.services,channels: channels,onTune: (channel){
+                    Navigator.pop(context);
+                    final index=channels.indexWhere((item)=>item.id==channel.id);
+                    if(index>=0)tune(index);
+                  },
+                ))).then((_){if(mounted)guideFocus.requestFocus();});
+              },icon:const Icon(Icons.calendar_view_week),label:const Text('EPG')),
               TextButton.icon(onPressed: openDiscovery, icon: const Icon(Icons.search),
                 label: const Text('Search')),
               IconButton(tooltip:'Preferences',icon:const Icon(Icons.settings),onPressed:(){
