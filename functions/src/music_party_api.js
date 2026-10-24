@@ -69,4 +69,18 @@ const createTvTipIntent=secured(async(req,res,uid)=>{
  });
  return res.status(200).json({intentId:id,status:record.status,amountMinor:record.amountMinor,currency:record.currency});
 });
-module.exports={proposeTrack,voteTrack,musicQueue,createTvTipIntent};
+
+const selectDjTrack=secured(async(req,res,uid)=>{
+ const roomId=req.body?.roomId,trackId=req.body?.trackId;
+ if(typeof roomId!=='string'||typeof trackId!=='string'||!/^[A-Za-z0-9_-]{1,100}$/.test(trackId))return res.status(400).json({error:'invalid_selection'});
+ if(!await hasMusicEntitlement(uid))return res.status(403).json({error:'subscription_required'});
+ const ref=db.collection('watchParties').doc(roomId),queueRef=ref.collection('queue').doc(trackId);
+ const result=await db.runTransaction(async tx=>{
+  const [room,entry]=await Promise.all([tx.get(ref),tx.get(queueRef)]);
+  if(!room.exists||room.get('status')!=='open'||room.get('kind')!=='music'||room.get('hostId')!==uid||!entry.exists)return false;
+  tx.update(ref,{currentTrackId:trackId,playback:{action:'pause',positionMs:0,updatedAt:admin.firestore.FieldValue.serverTimestamp()}});
+  return true;
+ });
+ return res.status(result?200:403).json({ok:result,trackId:result?trackId:null});
+});
+module.exports={proposeTrack,voteTrack,musicQueue,createTvTipIntent,selectDjTrack};
