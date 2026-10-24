@@ -11,6 +11,7 @@ class _TvGiftsAndTipsState extends State<TvGiftsAndTips> {
  final recipient=TextEditingController();
  final amount=TextEditingController(text:'50');
  String kind='creator',context='tv',feedback='';
+ String? selectedGift;
  bool pending=false;
  Future<void> createIntent()async{
   final shillings=int.tryParse(amount.text.trim());
@@ -45,6 +46,15 @@ class _TvGiftsAndTipsState extends State<TvGiftsAndTips> {
    DropdownButtonFormField<String>(value:context,decoration:const InputDecoration(labelText:'Experience'),
     items:const ['tv','music','podcast','watch_party'].map((x)=>DropdownMenuItem(value:x,child:Text(x))).toList(),
     onChanged:(v)=>setState(()=>context=v??'tv')),
+   const SizedBox(height:12),
+   const Text('Send a virtual gift (sets the optional tip amount)'),
+   Wrap(spacing:8,children:[
+     for(final gift in const [('Applause',100),('Coffee',250),('Spotlight',500),('Encore',1000)])
+       ChoiceChip(label:Text('${gift.$1} · KSh ${gift.$2}'),
+         selected:selectedGift==gift.$1,onSelected:(_)=>setState((){
+           selectedGift=gift.$1;amount.text=gift.$2.toString();
+         })),
+   ]),
    const SizedBox(height:12),
    TextField(controller:amount,keyboardType:TextInputType.number,decoration:const InputDecoration(
      labelText:'Tip amount in KSh')),
