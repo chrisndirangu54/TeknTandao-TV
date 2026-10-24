@@ -48,7 +48,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
     setState(() { selectedIndex = index; player = null; error = null; programmeGuide = const []; });
     widget.services.catalog.schedule(channels[index].id).then((items) {
       if (mounted && generation == request) setState(() => programmeGuide = items);
-    }).catchError((Object _) { /* Schedule is optional during playback. */ });
+    }).catchError((Object _) => <Programme>[]);
     await old?.dispose();
     if (!mounted || generation != request) return;
     final url = channels[index].hlsUrl;
