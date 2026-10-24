@@ -131,3 +131,5 @@ exports.pendingVenueAdmissions=venues.pendingVenueAdmissions;
 
 exports.reviewVenueRequests=venues.reviewVenueRequests;
 exports.moderateVenueRequest=venues.moderateVenueRequest;
+
+exports.venueRoomStatus=venues.venueRoomStatus;
