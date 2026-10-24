@@ -7,6 +7,7 @@ import 'tv_media_controls.dart';
 import 'tv_profile_settings.dart';
 import 'playback_diagnostics.dart';
 import 'tv_programme_guide.dart';
+import '../watch_parties/watch_party_screen.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 
@@ -152,6 +153,8 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                   },
                 ))).then((_){if(mounted)guideFocus.requestFocus();});
               },icon:const Icon(Icons.calendar_view_week),label:const Text('EPG')),
+              TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const WatchPartyScreen())),
+                icon: const Icon(Icons.groups), label: const Text('Watch party')),
               TextButton.icon(onPressed: openDiscovery, icon: const Icon(Icons.search),
                 label: const Text('Search')),
               IconButton(tooltip:'Preferences',icon:const Icon(Icons.settings),onPressed:(){
