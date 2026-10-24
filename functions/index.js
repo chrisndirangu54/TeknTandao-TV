@@ -128,3 +128,6 @@ exports.prepareVenuePurchase=venues.prepareVenuePurchase;
 
 exports.findPartyUser=venues.findPartyUser;
 exports.pendingVenueAdmissions=venues.pendingVenueAdmissions;
+
+exports.reviewVenueRequests=venues.reviewVenueRequests;
+exports.moderateVenueRequest=venues.moderateVenueRequest;
