@@ -116,7 +116,7 @@ const reviewVenueRequests=secured(async(req,res,uid)=>{
 });
 const moderateVenueRequest=secured(async(req,res,uid)=>{
  const {roomId,orderId,decision}=req.body||{};
- if(typeof roomId!=='string'||!/^\\w[\\w-]{0,127}$/.test(orderId??'')||
+ if(typeof roomId!=='string'||!/^[A-Za-z0-9_-]{1,128}$/.test(orderId??'')||
  !['approved','rejected','fulfilled'].includes(decision))
  return res.status(400).json({error:'invalid_request'});
  const roomRef=db.collection('venueParties').doc(roomId),orderRef=db.collection('venueFeatureOrders').doc(orderId);
