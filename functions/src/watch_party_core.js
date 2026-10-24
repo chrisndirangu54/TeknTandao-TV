@@ -1,6 +1,6 @@
 'use strict';
 const crypto=require('node:crypto');
-const KINDS=new Set(['movie','tv','podcast']);
+const KINDS=new Set(['movie','tv','podcast','music']);
 function roomInput(body){
  if(!body||!KINDS.has(body.kind)||!['public','private'].includes(body.visibility)||
  typeof body.title!=='string'||body.title.trim().length<2||body.title.length>100||
