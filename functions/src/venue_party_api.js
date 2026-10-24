@@ -1,6 +1,7 @@
 'use strict';
 const admin=require('firebase-admin'),{onRequest}=require('firebase-functions/v2/https');
 const crypto=require('node:crypto');
+const {transition}=require('./venue_fulfillment');
 const {authorize}=require('./security');
 const {venueInput,joinCode,codeDigest,admissionState,canOperate,paidFeatureRequest,publicVenue}=require('./venue_party_core');
 if(!admin.apps.length)admin.initializeApp();
@@ -100,4 +101,34 @@ const pendingVenueAdmissions=secured(async(req,res,uid)=>{
  res.status(200).json({pending:Object.entries(members).filter(([,role])=>role==='pending_approval')
    .slice(0,100).map(([memberId])=>memberId)});
 });
-module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase,findPartyUser,pendingVenueAdmissions};
+
+const reviewVenueRequests=secured(async(req,res,uid)=>{
+ const roomId=req.body?.roomId;
+ if(typeof roomId!=='string'||roomId.length>100)return res.status(400).json({error:'invalid_room'});
+ const room=await db.collection('venueParties').doc(roomId).get();
+ if(!room.exists||![room.get('ownerId'),room.get('liveDjId')].includes(uid))
+  return res.status(403).json({error:'host_only'});
+ const items=await db.collection('venueFeatureOrders').where('roomId','==',roomId).limit(100).get();
+ res.status(200).json({orders:items.docs.map(d=>({
+  orderId:d.id,feature:d.get('feature'),message:d.get('message')||'',
+  status:d.get('status'),paymentVerified:d.get('paymentVerified')===true
+ })).filter(item=>item.paymentVerified&&['awaiting_dj','approved'].includes(item.status))});
+});
+const moderateVenueRequest=secured(async(req,res,uid)=>{
+ const {roomId,orderId,decision}=req.body||{};
+ if(typeof roomId!=='string'||!/^\\w[\\w-]{0,127}$/.test(orderId??'')||
+ !['approved','rejected','fulfilled'].includes(decision))
+ return res.status(400).json({error:'invalid_request'});
+ const roomRef=db.collection('venueParties').doc(roomId),orderRef=db.collection('venueFeatureOrders').doc(orderId);
+ const outcome=await db.runTransaction(async tx=>{
+  const [room,order]=await Promise.all([tx.get(roomRef),tx.get(orderRef)]);
+  const venue=room.data(),item=order.data();
+  if(!venue||!item||item.roomId!==roomId||venue.status!=='open'||
+  ![venue.ownerId,venue.liveDjId].includes(uid)||item.paymentVerified!==true||
+  !transition(item.status,decision,'dj'))return false;
+  tx.update(orderRef,{status:decision,moderatedBy:uid,moderatedAt:admin.firestore.FieldValue.serverTimestamp()});
+  return true;
+ });
+ res.status(outcome?200:403).json({ok:outcome});
+});
+module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase,findPartyUser,pendingVenueAdmissions,reviewVenueRequests,moderateVenueRequest};
