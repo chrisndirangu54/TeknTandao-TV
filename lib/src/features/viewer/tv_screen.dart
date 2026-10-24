@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
+import '../bundles/bundle_plans_screen.dart';
 
 class TvScreen extends StatefulWidget {
   final AppServices services;
@@ -125,6 +126,8 @@ class _TvScreenState extends State<TvScreen> {
     ]);
     return Scaffold(
       appBar: AppBar(title: const Text('TeknTandao TV'), actions: [
+        IconButton(tooltip: 'TV and Internet packages', icon: const Icon(Icons.wifi_tethering),
+          onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const BundlePlansScreen()))),
         IconButton(tooltip: 'Account', onPressed: () => showDialog<void>(context: context, builder: (ctx) =>
           AlertDialog(title: const Text('Account integration'),
             content: const Text('Firebase single sign-on and subscriber entitlements require your configuration. This demo does not authenticate real subscribers.'),
