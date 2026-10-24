@@ -18,7 +18,7 @@ class _AiDjListeningRoomState extends State<AiDjListeningRoom> {
   try{
    final result=await widget.service!.post(endpoint,payload);
    if(endpoint=='musicQueue')queue=result['queue'] as List<dynamic>? ?? [];
-   message=endpoint=='proposeTrack'?'Track request accepted':endpoint=='voteTrack'?'Vote recorded':'Queue updated';
+   message=endpoint=='proposeTrack'?'Track request accepted':endpoint=='voteTrack'?'Vote recorded':endpoint=='selectDjTrack'?'Host selected the next track':'Queue updated';
   }catch(_){message='Unable to complete action. Check membership, media rights and connection.';}
   if(mounted)setState(()=>loading=false);
  }
@@ -49,8 +49,12 @@ class _AiDjListeningRoomState extends State<AiDjListeningRoom> {
     leading:const Icon(Icons.music_note),
     title:Text((item as Map)['trackId'].toString()),
     subtitle:Text('${item['votes']} votes · ${item['score']} points'),
-    trailing:IconButton(tooltip:'Vote for track',icon:const Icon(Icons.thumb_up),
-      onPressed:()=>action('voteTrack',{'roomId':room.text.trim(),'trackId':item['trackId']})),
+    trailing:Wrap(mainAxisSize:MainAxisSize.min,children:[
+      IconButton(tooltip:'Vote for track',icon:const Icon(Icons.thumb_up),
+        onPressed:()=>action('voteTrack',{'roomId':room.text.trim(),'trackId':item['trackId']})),
+      IconButton(tooltip:'DJ host: play this next',icon:const Icon(Icons.play_arrow),
+        onPressed:()=>action('selectDjTrack',{'roomId':room.text.trim(),'trackId':item['trackId']})),
+    ]),
    )),
    const SizedBox(height:18),
    const Text('Scoring is for queue ordering only. Tips do not buy votes. '
