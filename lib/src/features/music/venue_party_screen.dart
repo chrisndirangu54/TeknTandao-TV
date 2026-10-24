@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../watch_parties/watch_party_screen.dart';
 
 /// Room discovery is coarse opt-in area search; true GPS distance and Bluetooth
@@ -59,6 +60,15 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    const Divider(),
    TextField(controller:room,decoration:const InputDecoration(labelText:'Room ID (shareable via link / QR later)')),
    TextField(controller:code,decoration:const InputDecoration(labelText:'Private admission code')),
+   if(room.text.isNotEmpty)...[
+     const SizedBox(height:10),
+     const Text('Scan to join this party'),
+     Center(child:Container(color:Colors.white,padding:const EdgeInsets.all(14),
+       child:QrImageView(data:'https://tekntandao.web.app/party?roomId=${Uri.encodeComponent(room.text.trim())}',
+         size:170,backgroundColor:Colors.white))),
+     SelectableText('https://tekntandao.web.app/party?roomId=${Uri.encodeComponent(room.text.trim())}'),
+     const Text('The link contains only the room ID; private invite codes must be shared separately.'),
+   ],
    OutlinedButton(onPressed:busy?null:()=>call('joinVenueParty',{'roomId':room.text.trim(),'joinCode':code.text.trim()}),
      child:const Text('Join room')),
    const Divider(),
