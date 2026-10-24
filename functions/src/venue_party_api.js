@@ -84,4 +84,20 @@ const prepareVenuePurchase=secured(async(req,res,uid)=>{
  });
  res.status(200).json({orderId:id,status:result.status,amountMinor:result.amountMinor,currency:'KES'});
 });
-module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase};
+
+const findPartyUser=secured(async(req,res,uid)=>{
+ const handle=req.body?.handle;
+ if(typeof handle!=='string'||!/^[a-z0-9_]{3,24}$/.test(handle))return res.status(400).json({error:'invalid_handle'});
+ const user=await db.collection('publicPartyHandles').doc(handle).get();
+ if(!user.exists||user.get('discoverable')!==true)return res.status(404).json({error:'not_found'});
+ res.status(200).json({handle,displayName:user.get('displayName')||handle});
+});
+const pendingVenueAdmissions=secured(async(req,res,uid)=>{
+ const id=req.body?.roomId;if(typeof id!=='string')return res.status(400).json({error:'invalid_room'});
+ const room=await db.collection('venueParties').doc(id).get();
+ if(!room.exists||room.get('ownerId')!==uid)return res.status(403).json({error:'host_only'});
+ const members=room.get('members')||{};
+ res.status(200).json({pending:Object.entries(members).filter(([,role])=>role==='pending_approval')
+   .slice(0,100).map(([memberId])=>memberId)});
+});
+module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase,findPartyUser,pendingVenueAdmissions};
