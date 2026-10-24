@@ -125,3 +125,6 @@ exports.joinVenueParty=venues.joinVenueParty;
 exports.approveVenueMember=venues.approveVenueMember;
 exports.nominateOutput=venues.nominateOutput;
 exports.prepareVenuePurchase=venues.prepareVenuePurchase;
+
+exports.findPartyUser=venues.findPartyUser;
+exports.pendingVenueAdmissions=venues.pendingVenueAdmissions;
