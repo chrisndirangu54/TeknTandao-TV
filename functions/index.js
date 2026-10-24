@@ -115,3 +115,5 @@ exports.proposeTrack=musicParties.proposeTrack;
 exports.voteTrack=musicParties.voteTrack;
 exports.musicQueue=musicParties.musicQueue;
 exports.createTvTipIntent=musicParties.createTvTipIntent;
+
+exports.selectDjTrack=musicParties.selectDjTrack;
