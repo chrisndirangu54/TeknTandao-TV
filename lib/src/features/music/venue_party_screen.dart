@@ -14,6 +14,7 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
  String type='club',admission='public',djMode='ai',feature='song_request',message='';
  bool discoverable=false,busy=false;
  List<dynamic> rooms=const [],pendingMembers=const [],paidRequests=const [];
+ Map<String,dynamic>? roomStatus;
  Future<void> call(String endpoint,Map<String,dynamic> data)async{
   if(widget.service==null){setState(()=>message='Connect a verified sign-in and the deployed venue API first.');return;}
   setState(()=>busy=true);
@@ -21,7 +22,8 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    final result=await widget.service!.post(endpoint,data);
    if(!mounted)return;
    setState((){
-    if(endpoint=='discoverVenueParties'){rooms=result['rooms'] as List<dynamic>? ?? [];message='${rooms.length} venues found';}
+    if(endpoint=='venueRoomStatus'){roomStatus=result;message='Status: ${result['memberStatus']}';}
+    else if(endpoint=='discoverVenueParties'){rooms=result['rooms'] as List<dynamic>? ?? [];message='${rooms.length} venues found';}
     else if(endpoint=='pendingVenueAdmissions'){pendingMembers=result['pending'] as List<dynamic>? ?? [];message='${pendingMembers.length} admission requests';}
     else if(endpoint=='reviewVenueRequests'){paidRequests=result['orders'] as List<dynamic>? ?? [];message='${paidRequests.length} paid requests for DJ review';}
     else if(endpoint=='findPartyUser'){message='Found opt-in username: ${result['displayName']}';}
@@ -61,7 +63,15 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
      'djMode':djMode,'discoverable':discoverable,'approxArea':area.text.trim()}),
      child:const Text('Create venue')),
    const Divider(),
-   TextField(controller:room,decoration:const InputDecoration(labelText:'Room ID (shareable via link / QR later)')),
+   TextField(controller:room,decoration:const InputDecoration(labelText:'Room ID or share link'),
+     onChanged:(text){final uri=Uri.tryParse(text);final id=uri?.queryParameters['roomId'];if(id!=null){room.value=TextEditingValue(text:id,selection:TextSelection.collapsed(offset:id.length));}}),
+   OutlinedButton(onPressed:busy?null:()=>call('venueRoomStatus',{'roomId':room.text.trim()}),
+     child:const Text('Refresh my venue status')),
+   if(roomStatus!=null)ListTile(
+     title:Text('Membership: ${roomStatus!['memberStatus']}'),
+     subtitle:Text('DJ: ${roomStatus!['djMode']} · ${roomStatus!['memberCount']} joined'),
+     trailing:Icon(roomStatus!['isOutputOperator']==true?Icons.speaker:Icons.volume_off),
+   ),
    TextField(controller:code,decoration:const InputDecoration(labelText:'Private admission code')),
    if(room.text.isNotEmpty)...[
      const SizedBox(height:10),
