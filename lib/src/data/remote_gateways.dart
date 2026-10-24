@@ -68,7 +68,8 @@ class RemoteSubscriptions implements SubscriptionGateway {
     final items = json['subscriptions'] as List<dynamic>? ?? [];
     return items.map((raw) {
       final item = raw as Map<String, dynamic>;
-      final type = Product.values.firstWhere((p) => p.name.toUpperCase() == item['product'],
+      final type = Product.values.firstWhere((p) =>
+        (p == Product.ispTvBundle ? 'ISP_TV_BUNDLE' : p.name.toUpperCase()) == item['product'],
           orElse: () => throw const FormatException('Unknown product'));
       final state = SubscriptionState.values.firstWhere(
           (s) => s.name == item['status'], orElse: () => SubscriptionState.pending);
