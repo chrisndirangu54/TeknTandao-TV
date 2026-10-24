@@ -1,4 +1,4 @@
-enum Product { tv, isp, workspace }
+enum Product { tv, isp, workspace, ispTvBundle }
 enum SubscriptionState { pending, active, paused, expired }
 
 class Customer {
