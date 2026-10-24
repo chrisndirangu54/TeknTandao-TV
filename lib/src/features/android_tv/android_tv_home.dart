@@ -4,6 +4,8 @@ import 'package:video_player/video_player.dart';
 import 'tv_library.dart';
 import 'tv_discovery.dart';
 import 'tv_media_controls.dart';
+import 'tv_profile_settings.dart';
+import 'playback_diagnostics.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 
@@ -26,6 +28,8 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
   final FocusNode guideFocus = FocusNode(debugLabel: 'Guide');
   final ScrollController scroll = ScrollController();
   final TvLibrary library = TvLibrary();
+  DateTime playbackStartedAt = DateTime.now();
+  bool diagnosticsVisible = false;
 
   @override
   void initState() {
@@ -49,6 +53,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
   Future<void> tune(int index) async {
     if (index < 0 || index >= channels.length) return;
     final request = ++generation;
+    playbackStartedAt = DateTime.now();
     final old = player;
     setState(() { selectedIndex = index; player = null; error = null; programmeGuide = const []; });
     widget.services.catalog.schedule(channels[index].id).then((items) {
@@ -139,6 +144,12 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
               const Spacer(),
               TextButton.icon(onPressed: openDiscovery, icon: const Icon(Icons.search),
                 label: const Text('Search')),
+              IconButton(tooltip:'Preferences',icon:const Icon(Icons.settings),onPressed:(){
+                Navigator.push(context,MaterialPageRoute<void>(builder:(_)=>TvProfileSettings(library:library)))
+                  .then((_){if(mounted){setState((){});guideFocus.requestFocus();}});
+              }),
+              IconButton(tooltip:'Playback diagnostics',icon:const Icon(Icons.monitor_heart_outlined),
+                onPressed:()=>setState(()=>diagnosticsVisible=!diagnosticsVisible)),
               const Text('TV Guide  •  D-pad ↑↓ to change channels',
                 style: TextStyle(color: Colors.white70)),
             ]),
@@ -162,7 +173,12 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                 Text(current?.description ?? 'Discover broadcasters through a familiar channel guide.',
                   style: const TextStyle(color: Colors.white70, fontSize: 18)),
                 const SizedBox(height: 12),
-                TvMediaControls(player: player, dvrRightsGranted: current?.replayAllowed == true),
+                TvMediaControls(player: player, dvrRightsGranted: false),
+                if (diagnosticsVisible && player != null) ...[
+                  const SizedBox(height: 8),
+                  ...PlaybackDiagnostics(playbackStartedAt).snapshot(player!.value).entries.map(
+                    (entry)=>Text('${entry.key}: ${entry.value}',style:const TextStyle(fontSize:13,color:Colors.white70))),
+                ],
                 const SizedBox(height: 12),
                 Text('UP NEXT', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 6),
