@@ -24,6 +24,12 @@ const createWatchParty=endpoint(async(req,res,uid)=>{
  const media=await db.collection('watchPartyMedia').doc(input.mediaId).get();
  if(!media.exists || media.get('kind')!==input.kind || media.get('watchPartyAllowed')!==true ||
  media.get('rightsVerified')!==true)return res.status(403).json({error:'media_not_authorized'});
+ // Party participation requires an active service entitlement, independently
+ // of any future signed playback URL validation.
+ const subs=await db.collection('subscriptions').where('customerId','==',uid).limit(100).get();
+ const active=subs.docs.some(s=>['TV','ISP_TV_BUNDLE'].includes(s.get('product'))&&
+   ['active','trialing'].includes(s.get('status')));
+ if(!active)return res.status(403).json({error:'subscription_required'});
  const id=crypto.randomUUID(),invite=input.visibility==='private'?crypto.randomBytes(24).toString('base64url'):null;
  await db.collection('watchParties').doc(id).create({...input,hostId:uid,members:[uid],
    inviteHash:invite?hashInvite(invite):null,status:'open',
@@ -35,6 +41,10 @@ const joinWatchParty=endpoint(async(req,res,uid)=>{
  const id=req.body?.roomId;
  if(typeof id!=='string'||!/^[0-9a-f-]{36}$/.test(id))return res.status(400).json({error:'invalid_room'});
  const ref=db.collection('watchParties').doc(id);
+ const subs=await db.collection('subscriptions').where('customerId','==',uid).limit(100).get();
+ const subscribed=subs.docs.some(s=>['TV','ISP_TV_BUNDLE'].includes(s.get('product'))&&
+   ['active','trialing'].includes(s.get('status')));
+ if(!subscribed)return res.status(403).json({error:'subscription_required'});
  const result=await db.runTransaction(async tx=>{
   const snap=await tx.get(ref);if(!snap.exists)return 'not_found';
   const room=snap.data();
