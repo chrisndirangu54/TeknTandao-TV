@@ -3,6 +3,7 @@ import 'package:video_player/video_player.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 import '../bundles/bundle_plans_screen.dart';
+import '../account/customer_services_screen.dart';
 
 class TvScreen extends StatefulWidget {
   final AppServices services;
@@ -126,6 +127,8 @@ class _TvScreenState extends State<TvScreen> {
     ]);
     return Scaffold(
       appBar: AppBar(title: const Text('TeknTandao TV'), actions: [
+        IconButton(tooltip: 'My TV and internet services', icon: const Icon(Icons.manage_accounts_outlined),
+          onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => CustomerServicesScreen(services: widget.services)))),
         IconButton(tooltip: 'TV and Internet packages', icon: const Icon(Icons.wifi_tethering),
           onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const BundlePlansScreen()))),
         IconButton(tooltip: 'Account', onPressed: () => showDialog<void>(context: context, builder: (ctx) =>
