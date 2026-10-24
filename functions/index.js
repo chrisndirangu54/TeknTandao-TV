@@ -59,3 +59,45 @@ exports.tvApi = onRequest({cors: false, region: 'europe-west1'}, async (req, res
     return res.status(500).json({error:'internal_error'});
   }
 });
+
+const {validateOrderRequest,validatePublishedPlan,orderDocumentId,makePendingOrder} = require('./src/orders');
+
+/**
+ * Creates only an unpaid order. Real payment capture and subscription
+ * activation remain in the authoritative Workspace billing service.
+ */
+exports.createTvOrder = onRequest({cors:false, region:'europe-west1'}, async (req,res) => {
+  res.setHeader('Cache-Control','no-store');
+  if (req.method !== 'POST') return res.status(405).json({error:'method_not_allowed'});
+  let user;
+  try { user = await authorize(req, token=>admin.auth().verifyIdToken(token,true)); }
+  catch (_) { return res.status(401).json({error:'unauthenticated'}); }
+  let input;
+  try { input = validateOrderRequest(req.body); }
+  catch (_) { return res.status(400).json({error:'invalid_order_request'}); }
+  try {
+    const planSnapshot=await db.collection('tvPlans').doc(input.planId).get();
+    let plan;
+    try { plan=validatePublishedPlan(planSnapshot.data()); }
+    catch (_) { return res.status(404).json({error:'plan_unavailable'}); }
+    const id=orderDocumentId(user.uid,input.idempotencyKey);
+    const ref=db.collection('tvOrders').doc(id);
+    const order=await db.runTransaction(async tx => {
+      const current=await tx.get(ref);
+      if (current.exists) {
+        const value=current.data();
+        if(value.customerId!==user.uid || value.planId!==input.planId) throw new Error('idempotency_conflict');
+        return value;
+      }
+      const newOrder=makePendingOrder(user.uid,input.planId,plan,input.idempotencyKey);
+      tx.create(ref,newOrder);
+      return newOrder;
+    });
+    return res.status(200).json({orderId:id,planId:order.planId,product:order.product,
+      amountMinor:order.amountMinor,currency:order.currency,period:order.period,status:order.status});
+  } catch(err) {
+    if(err.message==='idempotency_conflict') return res.status(409).json({error:'idempotency_conflict'});
+    console.error('createTvOrder failed',{name:err?.name});
+    return res.status(500).json({error:'internal_error'});
+  }
+});
