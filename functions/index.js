@@ -101,3 +101,9 @@ exports.createTvOrder = onRequest({cors:false, region:'europe-west1'}, async (re
     return res.status(500).json({error:'internal_error'});
   }
 });
+
+const watchParties=require('./src/watch_party_api');
+exports.createWatchParty=watchParties.createWatchParty;
+exports.joinWatchParty=watchParties.joinWatchParty;
+exports.partyAction=watchParties.partyAction;
+exports.partyComment=watchParties.partyComment;
