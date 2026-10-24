@@ -6,6 +6,7 @@ import '../bundles/bundle_plans_screen.dart';
 import '../account/customer_services_screen.dart';
 import '../watch_parties/watch_party_screen.dart';
 import '../music/ai_dj_listening_room.dart';
+import '../music/venue_party_screen.dart';
 import '../gifting/tv_gifts_and_tips.dart';
 
 class TvScreen extends StatefulWidget {
@@ -130,6 +131,8 @@ class _TvScreenState extends State<TvScreen> {
     ]);
     return Scaffold(
       appBar: AppBar(title: const Text('TeknTandao TV'), actions: [
+        IconButton(tooltip: 'Venue party mode',icon: const Icon(Icons.nightlife),
+          onPressed: () => Navigator.push(context,MaterialPageRoute<void>(builder: (_) => const VenuePartyScreen()))),
         IconButton(tooltip: 'AI DJ listening parties',icon: const Icon(Icons.library_music),
           onPressed: () => Navigator.push(context,MaterialPageRoute<void>(builder: (_) => const AiDjListeningRoom()))),
         IconButton(tooltip: 'Creator gifting and tips',icon: const Icon(Icons.card_giftcard),
