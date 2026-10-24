@@ -117,3 +117,11 @@ exports.musicQueue=musicParties.musicQueue;
 exports.createTvTipIntent=musicParties.createTvTipIntent;
 
 exports.selectDjTrack=musicParties.selectDjTrack;
+
+const venues=require('./src/venue_party_api');
+exports.createVenueParty=venues.createVenueParty;
+exports.discoverVenueParties=venues.discoverVenueParties;
+exports.joinVenueParty=venues.joinVenueParty;
+exports.approveVenueMember=venues.approveVenueMember;
+exports.nominateOutput=venues.nominateOutput;
+exports.prepareVenuePurchase=venues.prepareVenuePurchase;
