@@ -55,8 +55,8 @@ class _CustomerServicesScreenState extends State<CustomerServicesScreen> {
   @override
   Widget build(BuildContext context) {
     final entitled = subscriptions.where((s) => s.active).map((s) => s.product).toSet();
-    final hasTv = entitled.contains(Product.tv);
-    final hasIsp = entitled.contains(Product.isp);
+    final hasTv = entitled.contains(Product.tv) || entitled.contains(Product.ispTvBundle);
+    final hasIsp = entitled.contains(Product.isp) || entitled.contains(Product.ispTvBundle);
     return Scaffold(
       appBar: AppBar(title: const Text('My TeknTandao'), actions: [
         IconButton(onPressed: refresh, tooltip: 'Refresh services', icon: const Icon(Icons.refresh)),
