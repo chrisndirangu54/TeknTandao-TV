@@ -8,6 +8,8 @@ import 'tv_profile_settings.dart';
 import 'playback_diagnostics.dart';
 import 'tv_programme_guide.dart';
 import '../watch_parties/watch_party_screen.dart';
+import '../music/ai_dj_listening_room.dart';
+import '../gifting/tv_gifts_and_tips.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 
@@ -153,6 +155,8 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                   },
                 ))).then((_){if(mounted)guideFocus.requestFocus();});
               },icon:const Icon(Icons.calendar_view_week),label:const Text('EPG')),
+              TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const AiDjListeningRoom())), icon: const Icon(Icons.library_music), label: const Text('AI DJ')),
+              TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const TvGiftsAndTips())), icon: const Icon(Icons.card_giftcard), label: const Text('Gifts')),
               TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const WatchPartyScreen())),
                 icon: const Icon(Icons.groups), label: const Text('Watch party')),
               TextButton.icon(onPressed: openDiscovery, icon: const Icon(Icons.search),
