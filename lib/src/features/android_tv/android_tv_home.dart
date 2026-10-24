@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
+import 'tv_library.dart';
+import 'tv_discovery.dart';
+import 'tv_media_controls.dart';
 import '../../core/app_services.dart';
 import '../../domain/models.dart';
 
@@ -22,6 +25,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
   int generation = 0;
   final FocusNode guideFocus = FocusNode(debugLabel: 'Guide');
   final ScrollController scroll = ScrollController();
+  final TvLibrary library = TvLibrary();
 
   @override
   void initState() {
@@ -60,6 +64,7 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
       await next.play();
       if (!mounted || generation != request) { await next.dispose(); return; }
       setState(() => player = next);
+      library.recordProgress(channels[index].id, next.value.position);
     } catch (_) {
       await next.dispose();
       if (mounted && generation == request) setState(() => error = 'Playback unavailable on this device.');
@@ -70,6 +75,16 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
     if (channels.isEmpty) return;
     final index = (selectedIndex + offset).clamp(0, channels.length - 1);
     if (index != selectedIndex) tune(index);
+  }
+
+  void openDiscovery() {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => TvDiscoveryScreen(
+      channels: channels, library: library, onSelect: (channel) {
+        Navigator.pop(context);
+        final i = channels.indexWhere((c) => c.id == channel.id);
+        if (i >= 0) tune(i);
+      },
+    ))).then((_) { if (mounted) guideFocus.requestFocus(); });
   }
 
   @override
@@ -93,6 +108,9 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
           focusNode: guideFocus,
           onKeyEvent: (node, event) {
             if (event is! KeyDownEvent) return KeyEventResult.ignored;
+            if (event.logicalKey == LogicalKeyboardKey.keyF) {
+              openDiscovery(); return KeyEventResult.handled;
+            }
             if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
               move(1); return KeyEventResult.handled;
             }
@@ -117,6 +135,8 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
               const SizedBox(width: 16),
               Text('TeknTandao TV', style: Theme.of(context).textTheme.headlineMedium),
               const Spacer(),
+              TextButton.icon(onPressed: openDiscovery, icon: const Icon(Icons.search),
+                label: const Text('Search')),
               const Text('TV Guide  •  D-pad ↑↓ to change channels',
                 style: TextStyle(color: Colors.white70)),
             ]),
@@ -139,6 +159,8 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
                 const SizedBox(height: 8),
                 Text(current?.description ?? 'Discover broadcasters through a familiar channel guide.',
                   style: const TextStyle(color: Colors.white70, fontSize: 18)),
+                const SizedBox(height: 12),
+                TvMediaControls(player: player, dvrRightsGranted: current?.replayAllowed == true),
                 const SizedBox(height: 12),
                 Text('UP NEXT', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 6),
