@@ -82,4 +82,18 @@ const partyComment=endpoint(async(req,res,uid)=>{
  });
  return res.status(outcome?201:403).json({ok:outcome});
 });
-module.exports={createWatchParty,joinWatchParty,partyAction,partyComment};
+const partySnapshot=endpoint(async(req,res,uid)=>{
+ const id=req.body?.roomId;
+ if(typeof id!=='string'||!/^[0-9a-f-]{36}$/.test(id))return res.status(400).json({error:'invalid_room'});
+ const snap=await db.collection('watchParties').doc(id).get();
+ const room=snap.data();
+ if(!room||!room.members?.includes(uid))return res.status(403).json({error:'not_a_member'});
+ const comments=await db.collection('watchPartyComments').where('roomId','==',id).limit(100).get();
+ const messages=comments.docs.map(d=>({id:d.id,authorId:d.get('authorId'),text:d.get('text'),
+   timestamp:d.get('createdAt')?.toMillis?.()??0})).sort((a,b)=>a.timestamp-b.timestamp);
+ return res.status(200).json({room:{id,title:room.title,kind:room.kind,visibility:room.visibility,
+   mediaId:room.mediaId,hostId:room.hostId,members:room.members,status:room.status,
+   playback:{action:room.playback?.action??'pause',positionMs:room.playback?.positionMs??0,
+     updatedAt:room.playback?.updatedAt?.toMillis?.()??0}},messages});
+});
+module.exports={createWatchParty,joinWatchParty,partyAction,partyComment,partySnapshot};
