@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'src/core/app_services.dart';
 import 'src/features/viewer/tv_screen.dart';
+import 'src/features/android_tv/android_tv_home.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,8 @@ class TeknTandaoApp extends StatelessWidget {
       ),
       useMaterial3: true,
     ),
-    home: TvScreen(services: services),
+    home: const bool.fromEnvironment('ANDROID_TV_MODE', defaultValue: false)
+      ? AndroidTvHome(services: services)
+      : TvScreen(services: services),
   );
 }
