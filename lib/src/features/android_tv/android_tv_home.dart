@@ -89,12 +89,10 @@ class _AndroidTvHomeState extends State<AndroidTvHome> {
           focusNode: guideFocus,
           onKeyEvent: (node, event) {
             if (event is! KeyDownEvent) return KeyEventResult.ignored;
-            if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
-                event.logicalKey == LogicalKeyboardKey.channelDown) {
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
               move(1); return KeyEventResult.handled;
             }
-            if (event.logicalKey == LogicalKeyboardKey.arrowUp ||
-                event.logicalKey == LogicalKeyboardKey.channelUp) {
+            if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
               move(-1); return KeyEventResult.handled;
             }
             if (event.logicalKey == LogicalKeyboardKey.select ||
