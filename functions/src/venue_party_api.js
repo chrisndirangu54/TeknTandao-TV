@@ -52,7 +52,7 @@ const approveVenueMember=secured(async(req,res,uid)=>{
  const ref=db.collection('venueParties').doc(roomId);
  const outcome=await db.runTransaction(async tx=>{
   const snap=await tx.get(ref),room=snap.data();
-  if(!room||room.ownerId!==uid||room.members?.[memberId]!=='pending_approval')return false;
+  if(!room||room.ownerId!==uid||room.members?.[memberId]!=='pending_approval'||room.admission==='paid')return false;
   tx.update(ref,{['members.'+memberId]:'admitted'});return true;
  });
  res.status(outcome?200:403).json({ok:outcome});
@@ -131,4 +131,16 @@ const moderateVenueRequest=secured(async(req,res,uid)=>{
  });
  res.status(outcome?200:403).json({ok:outcome});
 });
-module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase,findPartyUser,pendingVenueAdmissions,reviewVenueRequests,moderateVenueRequest};
+
+const venueRoomStatus=secured(async(req,res,uid)=>{
+ const id=req.body?.roomId;
+ if(typeof id!=='string'||id.length>100)return res.status(400).json({error:'invalid_room'});
+ const snap=await db.collection('venueParties').doc(id).get();
+ if(!snap.exists)return res.status(404).json({error:'not_found'});
+ const room=snap.data(),status=room.members?.[uid];
+ if(!status)return res.status(403).json({error:'not_member'});
+ res.status(200).json({roomId:id,name:room.name,admission:room.admission,
+  memberStatus:status,djMode:room.djMode,outputOperatorId:room.outputOperatorId,
+  isOutputOperator:room.outputOperatorId===uid,memberCount:Object.keys(room.members||{}).length});
+});
+module.exports={createVenueParty,discoverVenueParties,joinVenueParty,approveVenueMember,nominateOutput,prepareVenuePurchase,findPartyUser,pendingVenueAdmissions,reviewVenueRequests,moderateVenueRequest,venueRoomStatus};
