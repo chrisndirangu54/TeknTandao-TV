@@ -13,7 +13,7 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
  final name=TextEditingController(),area=TextEditingController(),room=TextEditingController(),code=TextEditingController(),operator=TextEditingController(),messageText=TextEditingController(),handle=TextEditingController();
  String type='club',admission='public',djMode='ai',feature='song_request',message='';
  bool discoverable=false,busy=false;
- List<dynamic> rooms=const [],pendingMembers=const [];
+ List<dynamic> rooms=const [],pendingMembers=const [],paidRequests=const [];
  Future<void> call(String endpoint,Map<String,dynamic> data)async{
   if(widget.service==null){setState(()=>message='Connect a verified sign-in and the deployed venue API first.');return;}
   setState(()=>busy=true);
@@ -23,6 +23,7 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    setState((){
     if(endpoint=='discoverVenueParties'){rooms=result['rooms'] as List<dynamic>? ?? [];message='${rooms.length} venues found';}
     else if(endpoint=='pendingVenueAdmissions'){pendingMembers=result['pending'] as List<dynamic>? ?? [];message='${pendingMembers.length} admission requests';}
+    else if(endpoint=='reviewVenueRequests'){paidRequests=result['orders'] as List<dynamic>? ?? [];message='${paidRequests.length} paid requests for DJ review';}
     else if(endpoint=='findPartyUser'){message='Found opt-in username: ${result['displayName']}';}
     else if(endpoint=='createVenueParty'){room.text=(result['roomId']??'').toString();code.text=(result['joinCode']??'').toString();message='Venue created. Keep your invitation code private.';}
     else message='Request submitted: ${result['status']??result['orderId']??result['operatorId']??'accepted'}';
@@ -93,6 +94,20 @@ class _VenuePartyScreenState extends State<VenuePartyScreen>{
    FilledButton.icon(onPressed:busy?null:()=>call('prepareVenuePurchase',{'roomId':room.text.trim(),'feature':feature,
      'message':messageText.text,'amountMinor':0,'idempotencyKey':'venue_${DateTime.now().microsecondsSinceEpoch}'}),
      icon:const Icon(Icons.payments_outlined),label:const Text('Prepare request (no charge)')),
+   const Divider(),
+   Text('Live DJ moderation',style:Theme.of(context).textTheme.titleLarge),
+   OutlinedButton(onPressed:busy?null:()=>call('reviewVenueRequests',{'roomId':room.text.trim()}),
+     child:const Text('Load verified requests')),
+   for(final item in paidRequests)Card(child:ListTile(
+     title:Text((item as Map)['feature'].toString()),
+     subtitle:Text('${item['message']} · ${item['status']}'),
+     trailing:Wrap(mainAxisSize:MainAxisSize.min,children:[
+       TextButton(onPressed:busy?null:()=>call('moderateVenueRequest',{'roomId':room.text.trim(),
+         'orderId':item['orderId'],'decision':'approved'}),child:const Text('Approve')),
+       TextButton(onPressed:busy?null:()=>call('moderateVenueRequest',{'roomId':room.text.trim(),
+         'orderId':item['orderId'],'decision':'rejected'}),child:const Text('Reject')),
+     ]),
+   )),
    if(message.isNotEmpty)Padding(padding:const EdgeInsets.all(16),child:Text(message)),
    const Text('Paid services are never fulfilled before verified settlement and moderation. '
     'No cash purchase, priority jump or loudspeaker takeover occurs in this preview.',
